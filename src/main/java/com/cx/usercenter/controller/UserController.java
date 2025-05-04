@@ -52,7 +52,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public BaseResponse<User> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
+    public BaseResponse<Long> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
         if(userLoginRequest==null){
             throw new BusinessException(PARAMS_ERROR);
         }
@@ -61,8 +61,8 @@ public class UserController {
         if(StringUtils.isAnyBlank(userAccount,userPassword)){
             throw new BusinessException(PARAMS_ERROR);
         }
-        User user=userService.doLogin(userAccount, userPassword,request);
-        return ResultUtils.success(user);
+        Long userId=userService.doLogin(userAccount, userPassword,request);
+        return ResultUtils.success(userId);
     }
 
     @PostMapping("/logout")
@@ -77,12 +77,11 @@ public class UserController {
     @GetMapping("/current")
     public BaseResponse<User> getCurrentUser(HttpServletRequest request) {
         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User currentUser = (User) userObj;
-        if (currentUser == null) {
+        Long currentUserId = (Long) userObj;
+        if (currentUserId == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN);
         }
-        long userId = currentUser.getId();
-        User user = userService.getById(userId);
+        User user = userService.getUserByIdFromCache(currentUserId);
         User safetyUser = userService.getSafetyUser(user);
         return ResultUtils.success(safetyUser);
     }

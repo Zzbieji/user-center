@@ -10,6 +10,7 @@ import com.cx.usercenter.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
@@ -78,7 +79,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public User doLogin(String userAccount, String userPassword, HttpServletRequest request) {
+    public Long doLogin(String userAccount, String userPassword, HttpServletRequest request) {
         //校验
         if(StringUtils.isAnyBlank(userAccount, userPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"参数为空");
@@ -104,11 +105,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             log.info("user login failed,userAccount cannot match userPassword");
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户不存在");
         }
-        //用户脱敏
-        User safetyUsesr=getSafetyUser(user);
         //记录用户登录状态
-        request.getSession().setAttribute(USER_LOGIN_STATE, safetyUsesr);
-        return safetyUsesr;
+        request.getSession().setAttribute(USER_LOGIN_STATE, user.getId());
+        return user.getId();
     }
 
     /**
@@ -143,5 +142,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public int userLogout(HttpServletRequest request) {
         request.getSession().removeAttribute(USER_LOGIN_STATE);
         return 1;
+    }
+
+    @Cacheable(value = "user", key = "#id")
+    @Override
+    public User getUserByIdFromCache(Long id) {
+        return this.getById(id);
     }
 }

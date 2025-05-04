@@ -32,7 +32,7 @@ public interface UserService extends IService<User> {
      * @param request 请求
      * @return 已登录用户信息
      */
-    User doLogin(String userAccount, String userPassword, HttpServletRequest request);
+    Long doLogin(String userAccount, String userPassword, HttpServletRequest request);
 
     /**
      * 用户脱敏
@@ -48,4 +48,12 @@ public interface UserService extends IService<User> {
      * @return
      */
     int userLogout(HttpServletRequest request);
+
+    /**
+     * 从缓存获取用户信息
+     *
+     * @param id
+     * @return
+     */
+    User getUserByIdFromCache(Long id);
 }
